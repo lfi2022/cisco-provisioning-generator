@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Configuration Cisco</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui;background:#0b0d10;color:#eef2f6;margin:0}
+header{padding:18px 24px;border-bottom:1px solid #27303a;display:flex;gap:18px;align-items:center}
+main{max-width:1400px;margin:auto;padding:24px}
+a{color:#70b7ff}.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.tabbtn{border:1px solid #34404c;background:#151b22;color:#fff;border-radius:8px;padding:9px 12px;cursor:pointer}
+.tabbtn.active{background:#1473e6}.tab{display:none}.tab.active{display:block}
+.card{background:#13181e;border:1px solid #27303a;border-radius:12px;padding:18px;margin:14px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+label{font-size:13px;color:#b8c3cd;display:block;margin-bottom:5px}
+input,select,textarea{width:100%;background:#0d1116;color:#fff;border:1px solid #34404c;border-radius:7px;padding:9px}
+textarea{min-height:190px;font-family:ui-monospace,monospace}
+button,.btn{background:#1473e6;color:#fff;border:0;border-radius:8px;padding:10px 14px;text-decoration:none;cursor:pointer}
+.secondary{background:#303943}.warning{color:#ffc76b}.muted{color:#9da9b5;font-size:13px}
+h2,h3{margin-top:4px}.button-card{border-left:3px solid #1473e6}
+.actions{position:sticky;bottom:0;background:#0b0d10dd;backdrop-filter:blur(8px);padding:12px 0;display:flex;gap:10px}
+.error{background:#4a1d24;border:1px solid #9b3645;color:#ffd9de;border-radius:8px;padding:12px;margin:0 0 14px}
+</style>
+</head>
+<body>
+<header><a href="/">← Téléphones</a><strong>{{ "Modifier" if phone_id else "Nouveau" }} Cisco</strong></header>
+<main>
+{% if request.query_params.get('error') %}<div class="error">{{ request.query_params.get('error') }}</div>{% endif %}
+<form method="post" action="/phone/save">
+<input type="hidden" name="phone_id" value="{{ phone_id or '' }}">
+
+<div class="card grid">
+<div><label>Nom interne</label><input name="name" value="{{ cfg.name }}" required placeholder="Bureau"></div>
+<div><label>MAC</label><input name="mac" value="{{ cfg.mac }}" required placeholder="70:1F:53:4D:19:C8"></div>
+<div><label>Modèle</label><select name="model">{% for value, model in phone_models.items() %}<option value="{{ value }}" {% if cfg.model == value %}selected{% endif %}>{{ model.label }}</option>{% endfor %}</select></div>
+</div>
+
+<div class="tabs">
+{% for key,g in groups.items() %}<button type="button" class="tabbtn" data-tab="{{ key }}">{{ g.title }}</button>{% endfor %}
+<button type="button" class="tabbtn" data-tab="buttons">Touches 1–4</button>
+<button type="button" class="tabbtn" data-tab="experimental">Expérimental</button>
+<button type="button" class="tabbtn" data-tab="custom">XML personnalisé</button>
+</div>
+
+{% for key,g in groups.items() %}
+<section id="{{ key }}" class="tab">
+<div class="card">
+<h2>{{ g.title }}</h2>
+<div class="grid">
+{% for f in g.fields %}
+<div>
+<label>{{ f[1] }}</label>
+{% if f[2] == "select" %}
+<select name="{{ f[0] }}">
+{% for option in f[4] %}<option value="{{ option }}" {% if cfg[f[0]]|string == option|string %}selected{% endif %}>{{ option }}</option>{% endfor %}
+</select>
+{% else %}
+<input type="{{ f[2] }}" name="{{ f[0] }}" value="{{ cfg[f[0]] }}">
+{% endif %}
+</div>
+{% endfor %}
+</div></div>
+</section>
+{% endfor %}
+
+<section id="buttons" class="tab">
+<h2>Touches physiques</h2>
+<p class="warning">Sur firmware Enterprise + Asterisk, plusieurs comptes SIP indépendants peuvent mélanger les credentials. Une seule ligne SIP principale est recommandée.</p>
+{% for b in cfg.buttons %}
+<div class="card button-card">
+<h3>Bouton {{ b.button }}</h3>
+<div class="grid">
+<div><label>Type</label><select name="b{{ b.button }}_type">{% for v,l in button_types %}<option value="{{ v }}" {% if b.type==v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+<div><label>Label</label><input name="b{{ b.button }}_label" value="{{ b.label }}"></div>
+<div><label>Line Index</label><input name="b{{ b.button }}_line_index" value="{{ b.line_index }}"></div>
+<div><label>Extension SIP</label><input name="b{{ b.button }}_extension" value="{{ b.extension }}"></div>
+<div><label>Display Name</label><input name="b{{ b.button }}_display_name" value="{{ b.display_name }}"></div>
+<div><label>Contact</label><input name="b{{ b.button }}_contact" value="{{ b.contact }}"></div>
+<div><label>Proxy</label><input name="b{{ b.button }}_proxy" value="{{ b.proxy }}"></div>
+<div><label>Port</label><input name="b{{ b.button }}_port" value="{{ b.port }}"></div>
+<div><label>Auth Name</label><input name="b{{ b.button }}_auth_name" value="{{ b.auth_name }}"></div>
+<div><label>Auth Password</label><input type="password" name="b{{ b.button }}_auth_password" value="{{ b.auth_password }}"></div>
+<div><label>Auto Answer</label><input name="b{{ b.button }}_auto_answer" value="{{ b.auto_answer }}"></div>
+<div><label>Call Waiting</label><input name="b{{ b.button }}_call_waiting" value="{{ b.call_waiting }}"></div>
+<div><label>Shared Line</label><input name="b{{ b.button }}_shared_line" value="{{ b.shared_line }}"></div>
+<div><label>MWI Lamp Policy</label><input name="b{{ b.button }}_mwi_lamp_policy" value="{{ b.mwi_lamp_policy }}"></div>
+<div><label>MWI AMWI</label><input name="b{{ b.button }}_mwi_amwi" value="{{ b.mwi_amwi }}"></div>
+<div><label>Numéro voicemail</label><input name="b{{ b.button }}_messages_number" value="{{ b.messages_number }}"></div>
+<div><label>Ring Idle</label><input name="b{{ b.button }}_ring_idle" value="{{ b.ring_idle }}"></div>
+<div><label>Ring Active</label><input name="b{{ b.button }}_ring_active" value="{{ b.ring_active }}"></div>
+<div><label>Max Calls</label><input name="b{{ b.button }}_max_calls" value="{{ b.max_calls }}"></div>
+<div><label>Busy Trigger</label><input name="b{{ b.button }}_busy_trigger" value="{{ b.busy_trigger }}"></div>
+<div><label>Cible BLF / Speed dial</label><input name="b{{ b.button }}_target" value="{{ b.target }}"></div>
+<div><label>Feature Option Mask</label><input name="b{{ b.button }}_feature_option_mask" value="{{ b.feature_option_mask }}"></div>
+</div></div>
+{% endfor %}
+</section>
+
+<section id="experimental" class="tab">
+<div class="card">
+<h2>Options avancées / expérimentales</h2>
+<p class="muted">Ces paramètres existent dans divers templates Enterprise communautaires ou générations Cisco proches. Leur prise en charge exacte dépend du firmware.</p>
+<div class="grid">
+{% for key in experimental_fields %}
+<div><label>{{ key }}</label><input name="exp__{{ key }}" value="{{ cfg.experimental.get(key,'') }}"></div>
+{% endfor %}
+</div></div>
+</section>
+
+<section id="custom" class="tab">
+<div class="card">
+<h2>XML personnalisé</h2>
+<p class="muted">Injecté juste avant la fermeture de &lt;device&gt;. Permet de tester une balise absente du formulaire.</p>
+<textarea name="custom_xml">{{ cfg.custom_xml }}</textarea>
+</div>
+</section>
+
+<div class="actions">
+<button type="submit" name="action" value="save" class="secondary">Enregistrer</button>
+<button type="submit" name="action" value="generate">Enregistrer + générer XML</button>
+{% if phone_id %}
+<a class="btn secondary" target="_blank" href="/phone/{{ phone_id }}/xml">Voir XML généré</a>
+{% endif %}
+</div>
+</form>
+</main>
+<script>
+const btns=[...document.querySelectorAll('.tabbtn')], tabs=[...document.querySelectorAll('.tab')];
+function show(id){tabs.forEach(t=>t.classList.toggle('active',t.id===id));btns.forEach(b=>b.classList.toggle('active',b.dataset.tab===id));localStorage.setItem('provtab',id)}
+btns.forEach(b=>b.onclick=()=>show(b.dataset.tab));
+show(localStorage.getItem('provtab') || '{{ default_tab }}');
+</script>
+</body>
+</html>

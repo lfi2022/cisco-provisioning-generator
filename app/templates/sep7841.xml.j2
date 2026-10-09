@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<device>
+    <deviceProtocol>{{ device_protocol or "SIP" }}</deviceProtocol>
+
+    {% for key in experimental_device_fields %}
+    {% if experimental.get(key) %}<{{ key }}>{{ experimental[key] }}</{{ key }}>{% endif %}
+    {% endfor %}
+
+    <sshUserId>{{ ssh_user }}</sshUserId>
+    <sshPassword>{{ ssh_password }}</sshPassword>
+
+    <devicePool>
+        <dateTimeSetting>
+            <dateTemplate>{{ date_template }}</dateTemplate>
+            <timeZone>{{ time_zone }}</timeZone>
+            <ntps>
+                <ntp>
+                    <name>{{ ntp_primary }}</name>
+                    <ntpMode>{{ ntp_mode }}</ntpMode>
+                </ntp>
+                {% if ntp_secondary %}
+                <ntp>
+                    <name>{{ ntp_secondary }}</name>
+                    <ntpMode>{{ ntp_mode }}</ntpMode>
+                </ntp>
+                {% endif %}
+            </ntps>
+        </dateTimeSetting>
+
+        <callManagerGroup>
+            <members>
+                <member priority="0">
+                    <callManager>
+                        <ports>
+                            <ethernetPhonePort>{{ ethernet_phone_port }}</ethernetPhonePort>
+                            <sipPort>{{ sip_port }}</sipPort>
+                            <securedSipPort>{{ secured_sip_port }}</securedSipPort>
+                        </ports>
+                        <processNodeName>{{ pbx_host }}</processNodeName>
+                    </callManager>
+                </member>
+            </members>
+        </callManagerGroup>
+    </devicePool>
+
+    <sipProfile>
+        <sipProxies>
+            <backupProxy>{{ backup_proxy }}</backupProxy>
+            <backupProxyPort>{{ backup_proxy_port }}</backupProxyPort>
+            <emergencyProxy>{{ emergency_proxy }}</emergencyProxy>
+            <emergencyProxyPort>{{ emergency_proxy_port }}</emergencyProxyPort>
+            <outboundProxy>{{ outbound_proxy }}</outboundProxy>
+            <outboundProxyPort>{{ outbound_proxy_port }}</outboundProxyPort>
+            <registerWithProxy>{{ register_with_proxy }}</registerWithProxy>
+        </sipProxies>
+
+        <sipCallFeatures>
+            <cnfJoinEnabled>{{ cnf_join_enabled }}</cnfJoinEnabled>
+            <callForwardURI>{{ call_forward_uri }}</callForwardURI>
+            <callPickupURI>{{ call_pickup_uri }}</callPickupURI>
+            <callPickupListURI>{{ call_pickup_list_uri }}</callPickupListURI>
+            <callPickupGroupURI>{{ call_pickup_group_uri }}</callPickupGroupURI>
+            <meetMeServiceURI>{{ meetme_uri }}</meetMeServiceURI>
+            <abbreviatedDialURI>{{ abbr_dial_uri }}</abbreviatedDialURI>
+            <rfc2543Hold>{{ rfc2543_hold }}</rfc2543Hold>
+        </sipCallFeatures>
+
+        <sipStack>
+            <sipInviteRetx>{{ sip_invite_retx }}</sipInviteRetx>
+            <sipRetx>{{ sip_retx }}</sipRetx>
+            <timerInviteExpires>{{ timer_invite_expires }}</timerInviteExpires>
+            <timerRegisterExpires>{{ timer_register_expires }}</timerRegisterExpires>
+        </sipStack>
+
+        <preferredCodec>{{ preferred_codec }}</preferredCodec>
+        <dtmfAvtPayload>{{ dtmf_avt_payload }}</dtmfAvtPayload>
+        <dscpForAudio>{{ dscp_for_audio }}</dscpForAudio>
+        <dscpForCallControl>{{ dscp_for_call_control }}</dscpForCallControl>
+
+        <phoneLabel>{{ phone_label }}</phoneLabel>
+
+        <sipLines>
+        {% for b in buttons %}
+            {% if b.type == "line" %}
+            <line button="{{ b.button }}"{% if b.line_index %} lineIndex="{{ b.line_index }}"{% endif %}>
+                <featureID>9</featureID>
+                <featureLabel>{{ b.label }}</featureLabel>
+                <proxy>{{ b.proxy or "USECALLMANAGER" }}</proxy>
+                <port>{{ b.port or sip_port }}</port>
+                <name>{{ b.extension }}</name>
+                <displayName>{{ b.display_name or b.label }}</displayName>
+                <contact>{{ b.contact or b.extension }}</contact>
+
+                <autoAnswer>
+                    <autoAnswerEnabled>{{ b.auto_answer or "2" }}</autoAnswerEnabled>
+                </autoAnswer>
+
+                <callWaiting>{{ b.call_waiting or "3" }}</callWaiting>
+                <authName>{{ b.auth_name or b.extension }}</authName>
+                <authPassword>{{ b.auth_password }}</authPassword>
+                <sharedLine>{{ b.shared_line or "false" }}</sharedLine>
+
+                <messageWaitingLampPolicy>{{ b.mwi_lamp_policy or "3" }}</messageWaitingLampPolicy>
+                <messageWaitingAMWI>{{ b.mwi_amwi or "1" }}</messageWaitingAMWI>
+                <messagesNumber>{{ b.messages_number or "*98" }}</messagesNumber>
+
+                <ringSettingIdle>{{ b.ring_idle or "4" }}</ringSettingIdle>
+                <ringSettingActive>{{ b.ring_active or "5" }}</ringSettingActive>
+                <maxNumCalls>{{ b.max_calls or "4" }}</maxNumCalls>
+                <busyTrigger>{{ b.busy_trigger or "2" }}</busyTrigger>
+
+                <forwardCallInfoDisplay>
+                    <callerName>true</callerName>
+                    <callerNumber>true</callerNumber>
+                    <redirectedNumber>true</redirectedNumber>
+                    <dialedNumber>true</dialedNumber>
+                </forwardCallInfoDisplay>
+            </line>
+            {% elif b.type in ["blf", "speeddial"] %}
+            <line button="{{ b.button }}">
+                <featureID>21</featureID>
+                <featureLabel>{{ b.label }}</featureLabel>
+                <speedDialNumber>{{ b.target }}</speedDialNumber>
+                {% if b.type == "blf" %}<featureOptionMask>{{ b.feature_option_mask or "1" }}</featureOptionMask>{% endif %}
+            </line>
+            {% endif %}
+        {% endfor %}
+        </sipLines>
+
+        <dialTemplate>{{ dial_template }}</dialTemplate>
+    </sipProfile>
+
+    <commonProfile>
+        <phonePassword>{{ phone_password }}</phonePassword>
+        <callLogBlfEnabled>{{ call_log_blf_enabled }}</callLogBlfEnabled>
+    </commonProfile>
+
+    <loadInformation>{{ load_information }}</loadInformation>
+    <directoryURL>{{ directory_url }}</directoryURL>
+    <servicesURL>{{ services_url }}</servicesURL>
+    <informationURL>{{ information_url }}</informationURL>
+    <messagesURL>{{ messages_url }}</messagesURL>
+    <authenticationURL>{{ authentication_url }}</authenticationURL>
+    <idleURL>{{ idle_url }}</idleURL>
+    <idleTimeout>{{ idle_timeout }}</idleTimeout>
+    <proxyServerURL>{{ proxy_server_url }}</proxyServerURL>
+    {% if softkey_file %}<softKeyFile>{{ softkey_file }}</softKeyFile>{% endif %}
+    {% if feature_policy_file %}<featurePolicyFile>{{ feature_policy_file }}</featurePolicyFile>{% endif %}
+
+    <vendorConfig>
+        <webAccess>{{ web_access }}</webAccess>
+        <sshAccess>{{ ssh_access }}</sshAccess>
+        <settingsAccess>{{ settings_access }}</settingsAccess>
+        <voiceVlanAccess>{{ voice_vlan_access }}</voiceVlanAccess>
+        <garp>{{ garp_enable }}</garp>
+        <disableSpeaker>{{ disable_speaker }}</disableSpeaker>
+        <disableSpeakerAndHeadset>{{ disable_speaker_headset }}</disableSpeakerAndHeadset>
+        <pcPort>{{ pc_port }}</pcPort>
+        <spanToPCPort>{{ span_to_pc_port }}</spanToPCPort>
+        <loggingDisplay>{{ logging_display }}</loggingDisplay>
+
+        {% for key, value in experimental.items() %}
+        {% if key not in experimental_device_fields and value != "" and value is not none %}
+        <{{ key }}>{{ value }}</{{ key }}>
+        {% endif %}
+        {% endfor %}
+    </vendorConfig>
+
+    <userLocale>
+        <name>{{ language_name }}</name>
+        <langCode>{{ language_code }}</langCode>
+    </userLocale>
+    <networkLocale>{{ network_locale }}</networkLocale>
+
+    {% if custom_xml %}
+    <!-- XML personnalisé -->
+    {{ custom_xml | safe }}
+    {% endif %}
+</device>

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LFINFO Provisioning</title>
+<style>
+body{font-family:system-ui;background:#0b0d10;color:#eef2f6;margin:0}
+header{padding:22px 28px;border-bottom:1px solid #27303a;display:flex;justify-content:space-between;align-items:center}
+main{max-width:1200px;margin:auto;padding:28px}
+a,.btn{color:#fff;text-decoration:none}.btn{background:#1473e6;padding:10px 14px;border-radius:8px;display:inline-block}
+.card{background:#13181e;border:1px solid #27303a;border-radius:12px;padding:18px;margin:12px 0}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px;border-bottom:1px solid #27303a}
+.muted{color:#9da9b5}.mono{font-family:ui-monospace,monospace}
+</style>
+</head>
+<body>
+<header><strong>LFINFO · Cisco Provisioning</strong><a class="btn" href="/phone/new">+ Ajouter un téléphone</a></header>
+<main>
+<div class="card">
+<table>
+<thead><tr><th>Nom</th><th>MAC</th><th>Modèle</th><th>Dernière modif.</th><th></th></tr></thead>
+<tbody>
+{% for p in phones %}
+<tr>
+<td>{{ p.name }}</td><td class="mono">{{ p.mac }}</td><td>{{ p.model }}</td><td class="muted">{{ p.updated_at }}</td>
+<td><a class="btn" href="/phone/{{ p.id }}">Configurer</a></td>
+</tr>
+{% else %}
+<tr><td colspan="5" class="muted">Aucun téléphone enregistré.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</main>
+</body>
+</html>
