@@ -1,0 +1,32 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Environnement / secrets
+.env
+.env.*
+!.env.example
+
+# Base de données
+*.db
+*.sqlite
+*.sqlite3
+
+# Fichiers générés de provisioning
+tftp/
+generated/
+SEP*.cnf.xml
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
